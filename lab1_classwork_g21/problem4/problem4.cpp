@@ -3,12 +3,44 @@
 
 int intrinsics_scalar(int N, float* A, float* B, float* C){
     //To implement
-    return 0;
+	int count = 0;
+	for (int i=0; i < N; i++){
+		if(A[i] < 26)
+		{
+			C[i] = 26;
+			count++;
+		} else {
+			C[i] = A[i] + B[i];
+		}
+	}
+    return count;
 }
 
 int intrinsics_simd(int N, float* A, float* B, float* C){
     //To implement 
-    return 0;
+	int count = 0;
+
+    for (int i=0; i<N; i+=VECTOR_LENGTH){
+		//Load values into lanes
+		__vfloat a = _vload(&A[i]);
+		__vfloat b = _vload(&B[i]);
+		__vfloat c = _vload(&C[i]);
+		
+		//compare vector
+		__vfloat comp = _vbcast(26.0f);
+
+		//create the operation mask
+		__vbool mask = _vlt(c, comp);
+
+		//update c and increment cnt
+		c = _vcopy(c, comp, mask);
+		count += _vpopcnt(mask);
+
+		//invert mask and operate on what is left
+		mask = _vnot(mask);
+		c = _vadd(a, b,mask);
+	}
+    return count;
 }
 
 void fillA(float* A){

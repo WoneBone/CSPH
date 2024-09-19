@@ -19,7 +19,7 @@ void clampedExp(float* values, int* exponents, float* output, int N){
 			mask = _vgt(exp, zero);
 		}
 		
-		__vfloat nine = _vbcast(9.999f);
+		__vfloat nine = _vbcast(9.999999f);
 		mask = _vgt(c, nine);
 		c = _vcopy(c, nine, mask);
 

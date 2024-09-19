@@ -6,7 +6,7 @@
 #include <type_traits>
 #include "stats.h"
 
-constexpr int VECTOR_LENGTH = 4; // Length of our fake vectors
+constexpr int VECTOR_LENGTH = 16; // Length of our fake vectors
 const int N = 16; // Size of the input
 stats code_stats;
 

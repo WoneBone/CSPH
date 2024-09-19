@@ -7,7 +7,7 @@ void clampedExp(float* values, int* exponents, float* output, int N){
 		__vfloat x = _vload(&values[i]);
 		__vint exp = _vload(&exponents[i]);
 		__vfloat c = _vbcast(1.0f);
-		__vint sub =  _vbcast(-1);
+		__vint sub =  _vbcast(1);
 		__vint zero = _vbcast(0);
 		__vbool mask = _vgt(exp, zero);
 		

@@ -23,11 +23,11 @@ int main(int argc, char** argv) {
 
     std::thread problem1_threads[num_threads];
 
-    for (int i=1 ; i< num_threads; i++){
+    for (int i=1 ; i<= num_threads; i++){
         problem1_threads[i]= std::thread(thread_func, i, 21);
     }
     thread_func(0,21);
-    for (int i = 1; i < num_threads; i++)
+    for (int i = 1; i <= num_threads; i++)
     {
         problem1_threads[i].join();
     }

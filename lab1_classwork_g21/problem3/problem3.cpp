@@ -7,7 +7,7 @@
 
 #include "CycleTimer.h"
 
-extern void evalSerial(int width, int height, int* data, int output[]);
+extern void evalSerial(int width, int height, int startRow, int totalRows, int* data, int output[]);
 
 extern void evalThread(int numThreads, int width, int height, int* data, int output[]);
 
@@ -74,13 +74,14 @@ int main(int argc, char** argv) {
     int numThreads = 2;
 
     if(argc != 3){
-        printf("Usage: ./problem3 imagename numthreads");
+        printf("Usage: ./problem2 imagename numthreads");
     }
 
     int* serial = new int[width*height];
     memset(serial, 0, width * height * sizeof(int));
 
     readImage(argv[1], serial, width, height);
+    numThreads = atoi(argv[2]);
 
     int* output_serial = new int[width*height];
     int* output_thread = new int[width*height];
@@ -95,7 +96,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 5; ++i) {
         memset(output_serial, 0, width * height * sizeof(int));
         double startTime = CycleTimer::currentSeconds();
-        evalSerial(width, height, serial, output_serial);
+        evalSerial(width, height, 0, height, serial, output_serial);
         double endTime = CycleTimer::currentSeconds();
         minSerial = std::min(minSerial, endTime - startTime);
     }

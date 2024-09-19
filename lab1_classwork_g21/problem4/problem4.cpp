@@ -30,7 +30,7 @@ int intrinsics_simd(int N, float* A, float* B, float* C){
 		__vfloat comp = _vbcast(26.0f);
 
 		//create the operation mask
-		__vbool mask = _vlt(c, comp);
+		__vbool mask = _vlt(a, comp);
 
 		//update c and increment cnt
 		c = _vcopy(c, comp, mask);
@@ -38,7 +38,10 @@ int intrinsics_simd(int N, float* A, float* B, float* C){
 
 		//invert mask and operate on what is left
 		mask = _vnot(mask);
-		c = _vadd(a, b,mask);
+		c = _vcopy(c, _vadd(a, b), mask);
+
+		_vstore(&C[i], c);
+		
 	}
     return count;
 }

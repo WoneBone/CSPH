@@ -27,10 +27,12 @@ void workerThreadStart(WorkerArgs * const args) {
     // to compute a part of the output image.  For example, in a
     // program that uses two threads, thread 0 could compute the top
     // half of the image and thread 1 could compute the bottom half.
-    int totalrows= args->height/args->numThreads;
-    int startrows= totalrows*args->threadId;
-
-    evalSerial(args->width,args->height,startrows,totalrows,args->data,args->output);
+    for (int i = args->threadId; i < args->height; i+=args->numThreads)
+    {
+       evalSerial(args->width,args->height,i,1,args->data,args->output);
+    }
+    
+    
 
     printf("Hello world from thread %d\n", args->threadId);
 }

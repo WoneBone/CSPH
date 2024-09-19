@@ -12,7 +12,7 @@ void clampedExp(float* values, int* exponents, float* output, int N){
 		__vbool mask = _vgt(exp, zero);
 		
 		//exponent
-		while(_vpopcnt(mask) > 1){
+		while(_vpopcnt(mask) > 0){
 			//multiply those whose exponent is greater then 1
 			c = _vmul(c, x, mask);
 			exp = _vsub(exp, sub);
@@ -34,7 +34,7 @@ int main()
 {
 	float values[] = {3.0, 2.0, 2.5, 1.25, 5.5, 0.5, 10.1, 3.15, 1.75, 6.55, 1.63, 1.5, 4.33, 0.15, 1.95, 2.83};
 	int exponents[] = {0, 2, 3, 10, 0, 4, 0, 3, 5, 1, 4, 9, 0, 5, 0, 3};
-	float output[16] = {0};
+	float output[N] = {0};
 
 	clampedExp(values, exponents, output, N);
 

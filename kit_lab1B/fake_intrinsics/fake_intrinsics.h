@@ -7,7 +7,7 @@
 #include "stats.h"
 
 constexpr int VECTOR_LENGTH = 8; // Length of our fake vectors
-const int N = 16; // Size of the input
+const int N = 80; // Size of the input
 stats code_stats;
 
 template <typename T>

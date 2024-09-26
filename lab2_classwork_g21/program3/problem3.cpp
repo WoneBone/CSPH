@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         // to you generate best and worse-case speedups
         
         // starter code populates array with random input values
-        if ((i%8)==0){
+        if ((i%16)==0){
             values[i] = (-14.75f);
         }else{
             values[i] = (21);

@@ -43,7 +43,12 @@ int main(int argc, char* argv[]) {
         // to you generate best and worse-case speedups
         
         // starter code populates array with random input values
-        values[i] = (-14.75f);
+        if (i=0){
+            values[i] = (-14.75f);
+        }else{
+            values[i] = (21f);
+        }
+         
     }
 
     initializeGold(groupNum, values, gold, N);

@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
         if ((i%16)==0){
             values[i] = (-14.75f);
         }else{
-            values[i] = (21f);
+            values[i] = (21);
         }
          
     }

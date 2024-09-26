@@ -37,8 +37,8 @@ task void image_ispc_task(uniform int width, uniform int height,uniform int rows
 
 export void image_ispc_withtasks(uniform int width, uniform int height,uniform int data[],uniform int output[])
 {
-    uniform int rowsPerTask = 1;
+    uniform int rowsPerTask = 2;
 
     // create 2 tasks
-    launch[height] image_ispc_task(width, height,rowsPerTask,data,output); 
+    launch[height/2] image_ispc_task(width, height,rowsPerTask,data,output); 
 }

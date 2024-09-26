@@ -1,0 +1,3 @@
+Date,Method,Name,ISA,Precision,Threads,AI,Gflops,Bandwidth,Time
+2024-09-25 20:12:17,Lab,App1,AVX512,dp,1,0.08836,1.5834,0,0
+2024-09-25 20:12:17,Lab,App2,AVX512,dp,8,0.1022,142.313,0,0

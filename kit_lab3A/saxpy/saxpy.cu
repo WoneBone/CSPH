@@ -56,6 +56,7 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     // of N that are not multiples of threadPerBlock.
     const int blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
 
+
     // These are pointers that will be pointers to memory allocated
     // *one the GPU*.  You should allocate these pointers via
     // cudaMalloc.  You can access the resulting buffers from CUDA
@@ -63,6 +64,8 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     // above) but you cannot access the contents these buffers from
     // this thread. CPU threads cannot issue loads and stores from GPU
     // memory!
+
+	float *d_x, *d_y, *d_r;
 
     //
     // STUDENTS TODO: allocate device memory buffers on the GPU using cudaMalloc.
@@ -73,7 +76,10 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     //
     // https://devblogs.nvidia.com/easy-introduction-cuda-c-and-c/
     //
-
+	
+	cudaMalloc(&d_x, N*sizeof(float));
+	cudaMalloc(&d_y, N*sizeof(float));
+	cudaMalloc(&d_r, N*sizeof(float));
         
     // start timing after allocation of device memory
     double startTime = CycleTimer::currentSeconds();
@@ -81,16 +87,20 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     //
     // STUDENTS TODO: copy input arrays to the GPU using cudaMemcpy
     //
-
+	cudaMemcpy(d_x, x, N*sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_y, y, N*sizeof(float), cudaMemcpyHostToDevice);
    
     // run CUDA kernel. (notice the <<< >>> brackets indicating a CUDA
     // kernel launch) Execution on the GPU occurs here.
-    saxpy_kernel<<<blocks, threadsPerBlock>>>(N, alpha, device_x, device_y, device_result);
+    double startTime2 = CycleTimer::currentSeconds();
+    saxpy_kernel<<<blocks, threadsPerBlock>>>(N, alpha, d_x, d_y, d_r);
+	cudaDeviceSincronize();
+    double endTime2 = CycleTimer::currentSeconds();
 
     //
     // STUDENTS TODO: copy result from GPU back to CPU using cudaMemcpy
     //
-    
+	cudaMemcpy(resultarray, d_r, N*sizeof(float), cudaMemcpyDeviceToHost);
     // end timing after result has been copied back into host memory
     double endTime = CycleTimer::currentSeconds();
 
@@ -102,12 +112,16 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
 
 
     double overallDuration = endTime - startTime;
+    double overallDuration2 = endTime2 - startTime2;
     printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
+	printf("Time to kerner %lf\n", endTime2);
 
     //
     // STUDENTS TODO: free memory buffers on the GPU using cudaFree
     //
-
+	cudaFree(d_x);
+	cudaFree(d_y);
+	cudaFree(d_r);
     
 }
 

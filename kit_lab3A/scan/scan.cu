@@ -90,13 +90,14 @@ __global__ void downsweep_kernel(int N, int* output, int two_d, int two_dplus1)
 __global__ void songo_cu(int* input, int *mask)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	printf("Set value %d and %d \n",input[i], input[i+1]);
+	
 	if(input[i] == input[i+1]){
 		mask[i] = 1;
 	}
 	else {
 		mask[i] = 0;
 	}
+    printf("Set value %d and %d and %d\n",input[i], input[i+1],mask[i]);
 }
 
 //More kernel more gooder

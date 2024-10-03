@@ -90,7 +90,7 @@ __global__ void downsweep_kernel(int N, int* output, int two_d, int two_dplus1)
 __global__ void songo_cu(int* input, int *mask)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	printf("Set value \n");
+	printf("Set value %d \n",input[i]);
 	if(input[i] == input[i+1]){
 		mask[i] = 1;
 	}

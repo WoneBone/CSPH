@@ -108,7 +108,7 @@ __global__ void sango_cu(int* input, int *mask, int *output)
 	if(mask[i] == 1){
 		output[input[i]] = i;
 	}
-    printf("Set value %d and %d and %d\n",input[i], output[input[i]],mask[i]);
+    //printf("Set value %d and %d and %d\n",input[i], output[input[i]],mask[i]);
 }
 
 
@@ -261,7 +261,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	songo_cu<<<numBlocks, THREADS_PER_BLOCK>>>(device_input, mask);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("Songo feito\n");
-    cudaMemcpy(maskH, mask, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(index, mask,  rounded_length * sizeof(int), cudaMemcpyDevicetoDevice);
 	for(int i =0; i < length; i++){
 		printf("| %d \t|", maskH[i]);
 	}

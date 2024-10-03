@@ -21,9 +21,9 @@ int cpu_condition(int i, int *A)
     /// TODO: CONDITION
     /// FILL HERE YOUR CONDITION
     /// you should change the code below!
-    if ((A[i] == A[i-1]) &&
-        (A[i] < A[i-2]) &&
-        (A[i] > A[i+1]) &&
+    if ((A[i] == A[i+1]) &&
+        (A[i] > A[i-1]) &&
+        (A[i] > A[i - 2]) &&
         (A[i] == A[i+2]))
         return 1;
 
@@ -57,7 +57,18 @@ int main(int argc, char** argv) {
     for (int i = 0; i < N; i++)
     {
         int m = i%16;
-        hostY[i] = m;
+
+		if (m < 1){
+			hostY[i] = 2;
+		} else if (m < 6) { 
+			hostY[i] = m;
+		} else if (m < 10) { 
+			hostY[i] = 10 - m;
+		} else if (m < 11) {
+			hostY[i] = 2;
+		} else {
+			hostY[i] = 3;
+		}
     }
 
     /// RUN CPU IMPLEMENTATION ///

@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
         
         // run CUDA implementation
         int cu_size;
-        for (int i=0; i<1; i++) {
+        for (int i=0; i<3; i++) {
             cudaTime = std::min(cudaTime, cudaFindRepeats(inarray, N, resultarray, &cu_size));
         }
 

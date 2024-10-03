@@ -85,6 +85,24 @@ __global__ void downsweep_kernel(int N, int* output, int two_d, int two_dplus1)
 }
 
 
+//More kernel more gooder
+__global__ void songo_cu(int* input, int *mask)
+{
+    size_t i = blockIdx.x*blockDim.x + threadIdx.x;
+	mask[i] = input[i] == input[i+1] ? 1 : 0; 
+}
+
+//More kernel more gooder
+__global__ void sango_cu(int* input, int *mask, int *output)
+{
+    size_t i = blockIdx.x*blockDim.x + threadIdx.x;
+	
+	if(mask[i] == 1){
+		output[input[i]] = i;
+	}
+}
+
+
 void exclusive_scan(int* input, int N, int* result)
 {
 
@@ -219,6 +237,15 @@ int find_repeats(int* device_input, int length, int* device_output) {
     //    
     // Note: As in the scan code, the calling code ensures that
     // allocated arrays are a power of 2 in size.
+	int *mask;
+	int *index;
+	cudaMalloc(&mask, length * sizeof(int));
+	cudaMalloc(&index, length * sizeof(int));
+	songo_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
+    thrust::exclusive_scan(mask, length, index);
+	sango_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
+	cudaFree(mask);
+	cudaFree(index);
 
     return 0; 
 }

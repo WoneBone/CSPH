@@ -266,16 +266,16 @@ int find_repeats(int* device_input, int length, int* device_output) {
 		printf("| %d \t|", maskH[i]);
 	}
 
-
+    cudaMemcpy(indexH, index, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
     exclusive_scan(mask, length, index);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("scan feito\n");
 
-	sango_cu<<<numBlocks, THREADS_PER_BLOCK>>>(index, mask, device_output);
+	sango_cu<<<numBlocks, THREADS_PER_BLOCK>>>(indexH, mask, device_output);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("sango feito\n");
 
-    cudaMemcpy(indexH, index, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
+    //cudaMemcpy(indexH, index, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
 	final_size = indexH[length];
 	for(int i =0; i < length; i++){
 		printf("| %d \t|", indexH[i]);

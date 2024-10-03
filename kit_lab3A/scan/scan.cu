@@ -261,7 +261,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	songo_cu<<<numBlocks, THREADS_PER_BLOCK>>>(device_input, mask);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("Songo feito\n");
-    cudaMemcpy(index, mask,  rounded_length * sizeof(int), cudaMemcpyDevicetoDevice);
+    cudaMemcpy(index, mask,  rounded_length * sizeof(int), cudaMemcpyDeviceToDevice);
 	for(int i =0; i < length; i++){
 		printf("| %d \t|", maskH[i]);
 	}

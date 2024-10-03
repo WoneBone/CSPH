@@ -90,8 +90,13 @@ __global__ void downsweep_kernel(int N, int* output, int two_d, int two_dplus1)
 __global__ void songo_cu(int* input, int *mask)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	mask[i] = input[i] == input[i+1] ? 1 : 0; 
-	printf("value %ld set to %d\n", i, mask[i]);
+	printf("Set value \n");
+	if(input[i] == input[i+1]){
+		mask[i] = 1;
+	}
+	else {
+		mask[i] = 0;
+	}
 }
 
 //More kernel more gooder
@@ -240,23 +245,49 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // Note: As in the scan code, the calling code ensures that
     // allocated arrays are a power of 2 in size.
 	int *mask;
+	int *indexH, *maskH;
 	int *index;
-	cudaMalloc(&mask, length * sizeof(int));
-	cudaMalloc(&index, length * sizeof(int));
+    int rounded_length = nextPow2(length);
+	int final_size = 0;
+
+	indexH = (int *) malloc(rounded_length * sizeof(int));
+	maskH = (int *) malloc(rounded_length * sizeof(int));
+	cudaMalloc(&mask, rounded_length * sizeof(int));
+	cudaMalloc(&index, rounded_length * sizeof(int));
 	printf("allocation done\n");
-	songo_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
+	int numBlocks = rounded_length/THREADS_PER_BLOCK;
+	songo_cu<<<numBlocks, THREADS_PER_BLOCK>>>(device_input, mask);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("Songo feito\n");
-    exclusive_scan(mask, N, index);
+    cudaMemcpy(maskH, mask, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
+	for(int i =0; i < length; i++){
+		printf("| %d \t|", maskH[i]);
+	}
+
+
+    exclusive_scan(mask, length, index);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("scan feito\n");
-	sango_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
+
+	sango_cu<<<numBlocks, THREADS_PER_BLOCK>>>(index, mask, device_output);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("sango feito\n");
+
+    cudaMemcpy(indexH, index, rounded_length * sizeof(int), cudaMemcpyDeviceToHost);
+	final_size = indexH[length];
+	for(int i =0; i < length; i++){
+		printf("| %d \t|", indexH[i]);
+	}
+
 	cudaFree(mask);
 	cudaFree(index);
+	free(indexH);
 
-    return 0; 
+	printf("final size: %d\n", final_size);
+	printf("length: %d\n", length);
+
+
+    return final_size; 
 }
 
 
@@ -273,6 +304,7 @@ double cudaFindRepeats(int *input, int length, int *output, int *output_length) 
     cudaMalloc((void **)&device_input, rounded_length * sizeof(int));
     cudaMalloc((void **)&device_output, rounded_length * sizeof(int));
     cudaMemcpy(device_input, input, length * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(device_output, input, length * sizeof(int), cudaMemcpyHostToDevice);
 
     cudaDeviceSynchronize();
     double startTime = CycleTimer::currentSeconds();

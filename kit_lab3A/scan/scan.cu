@@ -247,10 +247,12 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	songo_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
     cudaCheckError(cudaDeviceSynchronize());
 	printf("Songo feito\n");
-    thrust::exclusive_scan(mask, mask + length, index);
+    exclusive_scan(mask, N, index);
     cudaCheckError(cudaDeviceSynchronize());
+	printf("scan feito\n");
 	sango_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
     cudaCheckError(cudaDeviceSynchronize());
+	printf("sango feito\n");
 	cudaFree(mask);
 	cudaFree(index);
 

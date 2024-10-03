@@ -108,6 +108,7 @@ __global__ void sango_cu(int* input, int *mask, int *output)
 	if(mask[i] == 1){
 		output[input[i]] = i;
 	}
+    printf("Set value %d and %d and %d\n",input[i], output[input[i]],mask[i]);
 }
 
 

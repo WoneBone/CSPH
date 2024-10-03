@@ -104,7 +104,7 @@ __global__ void songo_cu(int* input, int *mask)
 __global__ void sango_cu(int* input, int *mask, int *output)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	//printf("Set value %d \n",mask[i]);
+	
 	if(mask[i] == 1){
 		output[input[i]] = i;
 	}

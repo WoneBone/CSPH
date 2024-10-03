@@ -54,7 +54,7 @@ __global__ void  gpu_initX(int N, int* devX)
 {
     // TODO
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	devX[i] = blockIdx;
+	devX[i] = blockIdx.x;
 
 }
 
@@ -91,7 +91,8 @@ __global__ void gpu_find_pattern(int N, int* devW, int* devZ, int* output)
 {
     // TODO
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
-	if(devW[i] != devW[i + 1]){
+	if(i == N);
+	else if(devW[i] != devW[i + 1]){
 		output[devW[i]] = devZ[i];
 	}
 
@@ -107,6 +108,7 @@ int runGPU(int threadsPerBlock, int N, int* hostY, int *gpuX, int *gpuY, int *gp
     // here we declare the arrays that we will need 
     int *devX, *devY;
     int *devZ, *devW;
+	int *t_devW;
     int *devResult;
     int gpuCount = 0;
 
@@ -121,6 +123,7 @@ int runGPU(int threadsPerBlock, int N, int* hostY, int *gpuX, int *gpuY, int *gp
 	cudaMalloc(&devY, N * sizeof(int));
 	cudaMalloc(&devZ, N * sizeof(int));
 	cudaMalloc(&devW, N * sizeof(int));
+	cudaMalloc(&t_devW, N * sizeof(int));
 	cudaMalloc(&devResult, N * sizeof(int));
 
     //////////////////////
@@ -133,10 +136,19 @@ int runGPU(int threadsPerBlock, int N, int* hostY, int *gpuX, int *gpuY, int *gp
     /// YOUR CUDA KERNEL LAUNCHES ////
     //////////////////////////////////
     gpu_initX<<<numBlocks, threadsPerBlock>>>(N, devX);
+    cudaCheckError(cudaDeviceSynchronize());
     gpu_makeZ<<<numBlocks, threadsPerBlock>>>(N, devX, devY, devZ);
+    cudaCheckError(cudaDeviceSynchronize());
     gpu_makeW<<<numBlocks, threadsPerBlock>>>(N, devZ, devW);
-    exclusive_scan(devW, N, devW, threadsPerBlock); //if you want to use it
-    gpu_find_pattern<<<numBlocks, threadsPerBlock>>>(N, devW, devZ, devResult);
+    cudaCheckError(cudaDeviceSynchronize());
+    cudaMemcpy(t_devW, devW,  N * sizeof(int), cudaMemcpyDeviceToDevice);
+    cudaCheckError(cudaDeviceSynchronize());
+    exclusive_scan(t_devW, N, t_devW, threadsPerBlock); //if you want to use it
+    gpu_find_pattern<<<numBlocks, threadsPerBlock>>>(N - 1, t_devW, devZ, devResult);
+    cudaCheckError(cudaDeviceSynchronize());
+
+    cudaMemcpy(gpuW, t_devW,  N * sizeof(int), cudaMemcpyDeviceToHost);
+	gpuCount = gpuW[N -1];
    
     //////////////////////
     /// H2D TRANSFERS ////
@@ -157,8 +169,9 @@ int runGPU(int threadsPerBlock, int N, int* hostY, int *gpuX, int *gpuY, int *gp
 	cudaFree(devX);
 	cudaFree(devZ);
 	cudaFree(devW);
+	cudaFree(t_devW);
 	cudaFree(devResult);
-	gpuCount = devResult[N -1];
+
     return gpuCount;
 }
 

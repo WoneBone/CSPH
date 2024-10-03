@@ -86,6 +86,7 @@ __global__ void downsweep_kernel(int N, int* output, int two_d, int two_dplus1)
 
 
 //More kernel more gooder
+//Alters mask so that it is set everytime A[i] = A[i+1]
 __global__ void songo_cu(int* input, int *mask)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
@@ -242,8 +243,10 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	cudaMalloc(&mask, length * sizeof(int));
 	cudaMalloc(&index, length * sizeof(int));
 	songo_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
-    thrust::exclusive_scan(mask, length, index);
+    thrust::exclusive_scan(mask, mask + length, index);
+    cudaCheckError(cudaDeviceSynchronize());
 	sango_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
+    cudaCheckError(cudaDeviceSynchronize());
 	cudaFree(mask);
 	cudaFree(index);
 

@@ -91,6 +91,7 @@ __global__ void songo_cu(int* input, int *mask)
 {
     size_t i = blockIdx.x*blockDim.x + threadIdx.x;
 	mask[i] = input[i] == input[i+1] ? 1 : 0; 
+	printf("value %ld set to %d\n", i, mask[i]);
 }
 
 //More kernel more gooder
@@ -242,10 +243,13 @@ int find_repeats(int* device_input, int length, int* device_output) {
 	int *index;
 	cudaMalloc(&mask, length * sizeof(int));
 	cudaMalloc(&index, length * sizeof(int));
-	songo_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
+	printf("allocation done\n");
+	songo_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (device_input, mask);
+    cudaCheckError(cudaDeviceSynchronize());
+	printf("Songo feito\n");
     thrust::exclusive_scan(mask, mask + length, index);
     cudaCheckError(cudaDeviceSynchronize());
-	sango_cu <<< lengh/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
+	sango_cu <<< length/THREADS_PER_BLOCK, THREADS_PER_BLOCK >>> (index, mask, device_output);
     cudaCheckError(cudaDeviceSynchronize());
 	cudaFree(mask);
 	cudaFree(index);

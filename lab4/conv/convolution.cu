@@ -119,6 +119,7 @@ void printCudaInfo() {
 __global__ void convolution_kernel(float *data, float *output, float *filters, int num_filters, int num_channels, int filter_size, int input_h, int input_w, int output_h, int output_w) {
   // TODO:
   // Here you should write your kernel to perform convolution using CUDA cores
+  float tmp;
   for (int f = 0; f < num_filters; f++) {
         tmp = 0;
         for (int kk = 0; kk < num_channels; kk++)

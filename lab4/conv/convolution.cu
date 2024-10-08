@@ -119,7 +119,12 @@ void printCudaInfo() {
 __global__ void convolution_kernel(float *data, float *output, float *filters, int num_filters, int num_channels, int filter_size, int input_h, int input_w, int output_h, int output_w) {
   // TODO:
   // Here you should write your kernel to perform convolution using CUDA cores
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = blockIdx.y * blockDim.y + threadIdx.y;
   float tmp;
+  if(i>output_w && j>output_h){
+    return;
+  }
   for (int f = 0; f < num_filters; f++) {
         tmp = 0;
         for (int kk = 0; kk < num_channels; kk++)
@@ -165,7 +170,7 @@ void convolution_gpu_cuda_cores(float *data, float *output, float *filters, int 
 
   // TODO:
   // Here you should configure your kernel launch parameters
-  dim3 threadsPerBlock = [32 ,32];
+  dim3 threadsPerBlock (32 ,32);
   dim3 numBlocks((output_w+threadsPerBlock.x-1)/threadsPerBlock.x,(output_h+threadsPerBlock.y-1)/threadsPerBlock.y,1);
 
   /* DO NOT MODIFY THIS PART

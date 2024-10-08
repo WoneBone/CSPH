@@ -197,13 +197,13 @@ void cublas_gemm_fp32(float *A, float *B, float *C, int m, int n, int k, bool wa
 void cublas_gemm_fp16(float *A, float *B, float *C, int m, int n, int k, bool warm_up = false) {
   // Here you should call the cublas gemm function for FP16 using tensor cores with the appropriate compute type
   // The mode only identifies the datatype we are computing in for printing our metrics
-  cublas_gemm(A, B, C, m, n, k, CUBLAS_COMPUTE_32F_FAST_16F, "FP16", warm_up);
+  cublas_gemm(A, B, C, m, n, k, CUBLAS_COMPUTE_16F, "FP16", warm_up);
   return;
 }
 
 void cublas_gemm_tf32(float *A, float *B, float *C, int m, int n, int k, bool warm_up = false) {
   // Here you should call the cublas gemm function for TF32 using tensor cores with the appropriate compute type
   // The mode only identifies the datatype we are computing in for printing our metrics
-  cublas_gemm(A, B, C, m, n, k, CUBLAS_COMPUTE_32F_FAST_TF32, "TF32", warm_up);
+  cublas_gemm(A, B, C, m, n, k, CUBLAS_COMPUTE_32F, "TF32", warm_up);
   return;
 }

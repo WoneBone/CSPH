@@ -120,13 +120,23 @@ void printCudaInfo() {
 void cublas_gemm(float *A, float *B, float *C, int m, int n, int k, cublasComputeType_t computeType, const char *mode, bool warm_up = false) {
   // TODO:
   // Here you should declare the devA, devB and devC arrays and allocate the memory on the device
-
+  int *devA, *devB, *devC;
+  
+  cudaMalloc(&devA, (m*k) * sizeof(int));
+  cudaMalloc(&devB, (n*k) * sizeof(int));
+  cudaMalloc(&devC, (m*n) * sizeof(int));
   // Here you should copy host input matrices to the device
 
+  cudaMemcpy(devA, A,  (m*k) * sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(devB, B,  (n*k) * sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(devC, C,  (m*n) * sizeof(int), cudaMemcpyHostToDevice);
+
   // Here you should create a handle for cuBLAS and initialize it with cublasCreate()
-
+  cublasHandle_t handle;
+  cublasCreate(&handle);
   // Here you should define whether the matrices are transposed or not
-
+  cublasOperation_t transa = CUBLAS_OP_N;
+  cublasOperation_t transb = CUBLAS_OP_N;
   // Scale factors are initialized: alpha = 1, beta = 0 for C = A * B
   // DO NOT MODIFY THESE VALUES
   const float alpha = 1.f;
@@ -146,7 +156,7 @@ void cublas_gemm(float *A, float *B, float *C, int m, int n, int k, cublasComput
   // Here the computeType is passed as an argument and it handles all the data conversions inside cuBLAS
   // So, as we saw in the class, you should keep the datatypes of the A, B and C matrices to be CUDA_R_32F (which means a real float) independently of the datatype we are operating in
   // Furthermore, you should keep the algorithm as CUBLAS_GEMM_DEFAULT
-
+  CUBLAS_CHECK(cublasGemmEx(handle, transa, transb, m, n, k, &alpha, devA, CUDA_R_32F, m, devB, CUDA_R_32F, k, &beta, devC,CUDA_R_32F, m, computeType, CUBLAS_GEMM_DEFAULT));
 
 
 
@@ -167,11 +177,13 @@ void cublas_gemm(float *A, float *B, float *C, int m, int n, int k, cublasComput
   }
 
   // Here you should copy the result matrix back to the host
-
+  cudaMemcpy(C, devC,  (m*n) * sizeof(int), cudaMemcpyDeviceToHost);
   // Do not forget to free the memory on the device here
-
+  cudaFree(devA);
+	cudaFree(devB);
+	cudaFree(devC);
   // Do not forget to destroy the cublas handle here with the cublasDestroy() function
-
+  cublasDestroy(handle);
   return;
 }
 

@@ -117,6 +117,22 @@ void printCudaInfo() {
 __global__ void convolution_kernel(float *data, float *output, float *filters, int num_filters, int num_channels, int filter_size, int input_h, int input_w, int output_h, int output_w) {
   // TODO: TASK 2
   // Complete the kernel
+  int j = blockIdx.x * blockDim.x + threadIdx.x;
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  float tmp;
+  if(i>=output_w || j>=output_h){
+    return;
+  }
+  for (int f = 0; f < num_filters; f++) {
+        tmp = 0;
+        for (int kk = 0; kk < num_channels; kk++)
+          for (int jj = 0; jj < filter_size; jj++)
+            for (int ii = 0; ii < filter_size; ii++) {
+              tmp += data[id_img(kk, (j + jj), (i + ii), num_channels, input_w)] * filters[id_filter(f, kk, jj, ii, num_filters, num_channels, filter_size)];
+            }
+        output[id_img(f, j, i, num_filters, output_w)] = tmp;
+      }
+  return;
 }
 
 /**
@@ -136,6 +152,22 @@ __global__ void convolution_kernel(float *data, float *output, float *filters, i
 __global__ void improved_convolution_kernel(float *data, float *output, float *filters, int num_filters, int num_channels, int filter_size, int input_h, int input_w, int output_h, int output_w) {
   // TODO: TASK 3
   // Complete the kernel
+  int j = blockIdx.x * blockDim.x + threadIdx.x;
+  int i = blockIdx.y * blockDim.y + threadIdx.y;
+  float tmp;
+  if(i>=output_w || j>=output_h){
+    return;
+  }
+  for (int f = 1; f < num_filters; f+=2) {
+        tmp = 0;
+		int kk = 2;
+          for (int jj = 0; jj < filter_size; jj++)
+            for (int ii = 0; ii < filter_size; ii++) {
+              tmp += data[id_img(kk, (j + jj), (i + ii), num_channels, input_w)] * filters[id_filter(f, kk, jj, ii, num_filters, num_channels, filter_size)];
+            }
+        output[id_img(f, j, i, num_filters, output_w)] = tmp;
+      }
+  return;
 }
 
 /**
@@ -169,8 +201,8 @@ void convolution_gpu_cuda_cores(float *data, float *output, float *filters, int 
 
   // TODO: TASK 2
   // Configure kernel launch parameters
-  int threadsPerBlock = 1;
-  int numBlocks = 1;
+  dim3 threadsPerBlock  (32, 32);
+  dim3 numBlocks  ((output_w+threadsPerBlock.x-1)/threadsPerBlock.x,(output_h+threadsPerBlock.y-1)/threadsPerBlock.y,1);
 
   /* DO NOT MODIFY THIS PART
    * This part of the code is responsible for accurately measuring the time taken by the kernel.
@@ -242,8 +274,8 @@ void improved_convolution_gpu_cuda_cores(float *data, float *output, float *filt
 
   // TODO: TASK 3
   // Configure your kernel launch parameters
-  int threadsPerBlock = 1;
-  int numBlocks = 1;
+  dim3 threadsPerBlock (32, 32);
+  dim3 numBlocks ((output_w+threadsPerBlock.x-1)/threadsPerBlock.x,(output_h+threadsPerBlock.y-1)/threadsPerBlock.y,1);
 
   /* DO NOT MODIFY THIS PART
    * This part of the code is responsible for accurately measuring the time taken by the kernel.
@@ -292,10 +324,30 @@ __global__ void filter_kernel(float *filter, int num_filters, int num_channels, 
   float variance = 30.f;
   // TODO: TASK 7
   // Complete the kernel, do not change the variance
+  int i =  threadIdx.y;
+  int j =  threadIdx.x;
+	int f = blockIdx.x;
+	int c = 2;
+	if(f%2 != 1)
+		return;
+	filter[id_filter(f, c, j, i, num_filters, num_channels, filter_size)] = gaussian_d(i - (filter_size - 1)/2, j - (filter_size -1)/2, variance);
+
 }
 
 int populate_filter_gpu(float *filter, int num_filters, int num_channels, int filter_size) {
   // TODO: TASK 7
   // Complete the function and return 1 if implemented
-  return 0;
+	float *device_filters;
+	cudaCheckError(cudaMalloc(&device_filters, num_filters * num_channels * filter_size * filter_size * sizeof(float)));
+	dim3 threadsPerBlock (filter_size, filter_size);
+	dim3 numBlocks (num_filters);
+
+	filter_kernel<<<numBlocks, threadsPerBlock>>>(device_filters, num_filters, num_channels, filter_size);
+
+	cudaCheckError(cudaDeviceSynchronize());
+	cudaCheckError(cudaMemcpy(filter, device_filters, filter_size* filter_size * num_filters * num_channels * sizeof(float), cudaMemcpyDeviceToHost));
+	cudaFree(device_filters);
+
+
+  return 1;
 }

@@ -47,9 +47,9 @@ int main(int argc, char **argv) {
   // initialize A and B
   // TODO: INIT A MATRIX
   for (int i = 0; i < k; i++)
-    for (int p = 0; p < 2; p++)
-      for (int j = p * (m / 2); j < (p + 1) * (m / 2); j++) {
-        if (p % 2 == 0)
+    for (int p = 0; p < 4; p++)
+      for (int j = p * (m / 4); j < (p + 1) * (m / 4); j++) {
+        if (p % 4 == 0)
           A[IDX2C(j, i, m)] = 1.f;
         else
           A[IDX2C(j, i, m)] = 1024000.f;

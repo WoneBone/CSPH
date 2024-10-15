@@ -41,8 +41,7 @@ int main(int argc, char *argv[]) {
   int num_filters = 4;   // number of filters
 
   // TODO: INIT FILTER SIZE
-  int filter_size = 3;  // filter size
-
+  int filter_size = 9;  // filter size
   Mode mode = FP32;  // default mode
   bool cudnn = false;
 
@@ -111,12 +110,16 @@ int main(int argc, char *argv[]) {
   // measure time for filter generation
   double startTime = CycleTimer::currentSeconds();
   // TODO: INIT FILTERS
-  for (int f = 0; f < num_filters; f++)
-    for (int c = 0; c < num_channels; c++) {
-      for (int j = 0; j < filter_size; j++)
-        for (int i = 0; i < filter_size; i++)
-          filters[id_filter(f, c, j, i, num_filters, num_channels, filter_size)] = gaussian(i - (filter_size - 1) / 2, j - (filter_size - 1) / 2, variance);
-    }
+  for(int f = 0; f < num_filters; f++){
+	if(f%2 == 1)
+		for(int c = 0; c < num_channels; c++){
+			if(c% num_channels == 2)
+				for(int j = 0; j < filter_size; j++)
+					for(int i = 0; i < filter_size; i++)
+						filters[id_filter(f, c, j, i, num_filters, num_channels, filter_size)] = gaussian(i - (filter_size - 1)/2, j - (filter_size -1)/2, variance);
+
+		}
+  }
   //----
   double endTime = CycleTimer::currentSeconds();
   printf("Filter generation time: %.3f ms\n\n", 1000.f * (endTime - startTime));

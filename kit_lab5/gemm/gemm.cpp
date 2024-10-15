@@ -84,19 +84,17 @@ double gemm_parallel_gpu(const Matrix &A, const Matrix &Bt, Matrix &C)
     double start_time = omp_get_wtime();
 	
 	#pragma omp target map(to:A_data[0: M*K]) map(to:Bt_data[0: N*K]) map(from:C_data[0: N * M])
+	for (int cr = 0; cr < M; cr++)
 	{
-    for (int cr = 0; cr < M; cr++)
-    {
-        for (int cc = 0; cc < N; cc++)
-        {
-            float val = 0.0;
-            for (int k = 0; k < K; k++)
-            {
-                val += A_data[cr * M + k] * Bt_data[cc * K + k];
-            }
-            C_data[cr * M + cc] = val;
-        }
-    }
+		for (int cc = 0; cc < N; cc++)
+		{
+			float val = 0.0;
+			for (int k = 0; k < K; k++)
+			{
+				val += A_data[cr * M + k] * Bt_data[cc * K + k];
+			}
+			C_data[cr * M + cc] = val;
+		}
 	}
     return omp_get_wtime() - start_time;
 }

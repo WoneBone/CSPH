@@ -49,7 +49,7 @@ double gemm_parallel_cpu(const Matrix &A, const Matrix &Bt, Matrix &C)
 
     double start_time = omp_get_wtime();
 
-	#pragma omp parallel for shared(M, N, K, C, A, Bt, C)
+	#pragma omp parallel for shared(M, N, K, C, A, Bt)
     for (int cr = 0; cr < M; cr++)
     {
         for (int cc = 0; cc < N; cc++)
@@ -83,7 +83,7 @@ double gemm_parallel_gpu(const Matrix &A, const Matrix &Bt, Matrix &C)
 
     double start_time = omp_get_wtime();
 	
-#pragma omp target map(to:A_data[0: M*K]) map(to:Bt[0: N*K]) map(from:C_data[0: N * M])
+#pragma omp target map(to:A_data[0: M*K]) map(to:Bt_data[0: N*K]) map(from:C_data[0: N * M])
     for (int cr = 0; cr < M; cr++)
     {
         for (int cc = 0; cc < N; cc++)

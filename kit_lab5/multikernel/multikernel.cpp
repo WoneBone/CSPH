@@ -175,16 +175,16 @@ double mk_parallel_opt(const Matrix &A, const Matrix &Bt, Matrix &C, const Vecto
     double start_time = omp_get_wtime();
 
     #pragma omp target data \
-        map(to: A_data[0:M*K], Bt_data[0:K*N], X_data[0:vec_sz], Y_data[0:vec_sz]) \
-        map(from: C_data[0:M*N], Z_data[0:vec_sz]) 
+      map(to: A_data[0:M*K], Bt_data[0:K*N], X_data[0:vec_sz], Y_data[0:vec_sz]) \
+      map(from: C_data[0:M*N], Z_data[0:vec_sz]) 
+	{
     // Kernel 1, matrix multiplication
-	//
-	#pragma omp target depend(out:C_data)
-	#pragma omp target teams distribute
+	
+	#pragma omp target teams distribute nowait depend(out:C_data)
     for (int cr = 0; cr < M; cr++)
     {
 		
-            #pragma omp loop
+		#pragma omp loop
         for (int cc = 0; cc < N; cc++)
         {
             float val = 0.0;
@@ -196,16 +196,16 @@ double mk_parallel_opt(const Matrix &A, const Matrix &Bt, Matrix &C, const Vecto
         }
     }
 
-	#pragma omp target depend(out:Z_data)
-	#pragma omp loop
+	#pragma omp target teams loop nowait depend(out:Z_data)
     // Kernel 2, Z[i] = 2 * X[i] ^ Y[i]
     for (int i = 0; i < vec_sz; i++)
     {
         Z_data[i] = 2.0 * powf(X_data[i], Y_data[i]);
     }
 
-	#pragma omp target depend(in:C_data, Z_data)
-	#pragma omp loop
+
+	#pragma omp target teams loop depend(in:C_data, Z_data)
+
     // Kernel 3, C[i][j] += Z[j]
     for (int cr = 0; cr < M; cr++)
     {
@@ -214,6 +214,7 @@ double mk_parallel_opt(const Matrix &A, const Matrix &Bt, Matrix &C, const Vecto
             C_data[cr * M + cc] += Z_data[cc];
         }
     }
+	}
 
     return omp_get_wtime() - start_time;
 }

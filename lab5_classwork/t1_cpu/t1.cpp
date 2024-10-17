@@ -135,14 +135,16 @@ long count_edges_depth_2_parallel(Graph graph, long *solution, int *_unused)
 {
     const int n_nodes = num_nodes(graph);
     long total_edges = 0;
-
+    
     // For every node
+    #pragma omp parallel for simd reduction(+: total_edges)
     for (int i = 0; i < n_nodes; ++i)
     {
         long edges = 0;
         // For every neighbor of this node, add its number of outgoing edges
         const Vertex *start = outgoing_begin(graph, i);
         const Vertex *end = outgoing_end(graph, i);
+        #pragma omp loop
         for (const Vertex *v = start; v != end; ++v)
             edges += outgoing_size(graph, *v);
 

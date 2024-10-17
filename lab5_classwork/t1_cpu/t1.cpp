@@ -223,7 +223,7 @@ long count_edges_depth_2_index(Graph graph, long *solution, int *index)
     long total_edges = 0;
 
     // For every node
-    #pragma omp parallel for simd schedule(static,YOUR_DISTRIBUTION) reduction(+: total_edges) shared(solution)
+    #pragma omp parallel for simd schedule(static,YOUR_DISTRIBUTION) reduction(+: total_edges) 
     for (int i = 0; i < n_nodes; ++i)
     {
         long edges = 0;
@@ -236,7 +236,7 @@ long count_edges_depth_2_index(Graph graph, long *solution, int *index)
 
         // store the solution
         solution[index[i]] += edges;
-
+        #pragma omp barrier
         total_edges += edges;
     }
 

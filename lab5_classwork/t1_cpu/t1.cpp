@@ -223,12 +223,14 @@ long count_edges_depth_2_index(Graph graph, long *solution, int *index)
     long total_edges = 0;
 
     // For every node
+    #pragma omp parallel for simd schedule(static,YOUR_DISTRIBUTION) reduction(+: total_edges, solution)
     for (int i = 0; i < n_nodes; ++i)
     {
         long edges = 0;
         // For every neighbor of this node, add its number of outgoing edges
         const Vertex *start = outgoing_begin(graph, i);
         const Vertex *end = outgoing_end(graph, i);
+        #pragma omp loop
         for (const Vertex *v = start; v != end; ++v)
             edges += outgoing_size(graph, *v);
 

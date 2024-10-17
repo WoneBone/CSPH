@@ -162,10 +162,15 @@ jcb_result jacobi_gpu(Matrix &grid)
     float residual = 1.0;
     /* Both kernels can be offloaded to the GPU quite effectively. Try to recall the OpenMP
     construct that can help you avoid redundant data transfers. */ 
+
     while (residual > MAX_RESIDUAL)
     {
         /* This kernel should be pretty straightforward to parallelize on the GPU */
+		#pragma omp target data map(tofrom:data[0:rows*cols]) map(to:data_new[0:rows*cols])
+		{
+		#pragma omp target teams distribute
         for (int r = 1; r < rows - 1; r++)
+			#pragma omp loop
             for (int c = 1; c < cols - 1; c++)
             {
                 // update each cell based on its neighbors
@@ -184,14 +189,19 @@ jcb_result jacobi_gpu(Matrix &grid)
         forget to map the residual. Secondly, remember that all threads need to work together to arrive
         at the maximum residual, also known as a reduction. OpenMP supports a bunch of reduction
         identifiers, not just a reduction sum! https://www.openmp.org/spec-html/5.0/openmpsu107.html */
+													 
+		#pragma omp target teams distribute map(tofrom:residual)
         for (int r = 1; r < rows - 1; r++)
+			#pragma omp loop reduction (max : residual)
+
             for (int c = 1; c < cols - 1; c++)
             {
                 int idx = r * cols + c;
                 residual = MAX(std::abs(data_new[idx] - data[idx]), residual);
                 data[idx] = data_new[idx];
             }
-
+		}
+		
         iterations++;
     }
 

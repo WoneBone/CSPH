@@ -163,11 +163,11 @@ jcb_result jacobi_gpu(Matrix &grid)
     /* Both kernels can be offloaded to the GPU quite effectively. Try to recall the OpenMP
     construct that can help you avoid redundant data transfers. */ 
 
+	#pragma omp target data map(tofrom:data[0:rows*cols]) map(to:data_new[0:rows*cols])
+	{
     while (residual > MAX_RESIDUAL)
     {
         /* This kernel should be pretty straightforward to parallelize on the GPU */
-		#pragma omp target data map(tofrom:data[0:rows*cols]) map(to:data_new[0:rows*cols])
-		{
 		#pragma omp target teams distribute
         for (int r = 1; r < rows - 1; r++)
 			#pragma omp loop
@@ -193,17 +193,16 @@ jcb_result jacobi_gpu(Matrix &grid)
 		#pragma omp target teams distribute map(tofrom:residual)
         for (int r = 1; r < rows - 1; r++)
 			#pragma omp loop reduction (max : residual)
-
             for (int c = 1; c < cols - 1; c++)
             {
                 int idx = r * cols + c;
                 residual = MAX(std::abs(data_new[idx] - data[idx]), residual);
                 data[idx] = data_new[idx];
             }
-		}
 		
         iterations++;
     }
+	}
 
     return {omp_get_wtime() - start_time, iterations};
 }

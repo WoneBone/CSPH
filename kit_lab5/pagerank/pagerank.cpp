@@ -35,7 +35,7 @@ void pageRank(Graph graph, double *solution, double damping, double convergence)
     {
         // Reset the global diff
         double global_diff = 0.0;
-
+		#pragma omp parallel for reduction(+: global_diff)
         // Compute the new score for all nodes
         for (int i = 0; i < n_nodes; ++i)
         {
@@ -45,6 +45,7 @@ void pageRank(Graph graph, double *solution, double damping, double convergence)
             const Vertex *end = incoming_end(graph, i);
             // Compute new core of the node i by considering all nodes v reachable from incoming edges
             // For this, accumulate the ratios of old scores and outgoing sizes of each condsidered node 
+			#pragma omp loop
             for (const Vertex *v = start; v != end; ++v)
                 new_score[i] += old_score[*v] / static_cast<double>(outgoing_size(graph, *v));
 
@@ -52,6 +53,7 @@ void pageRank(Graph graph, double *solution, double damping, double convergence)
             new_score[i] = (damping * new_score[i]) + (1.0 - damping) / static_cast<double>(n_nodes);
 
             // Update the score by summing over all nodes in graph with no outgoing edges
+			#pragma omp loop
            for (int j = 0; j < n_nodes; ++j)
                if (outgoing_size(graph, j) == 0)
                    new_score[i] += damping * old_score[j] / n_nodes;
@@ -61,11 +63,11 @@ void pageRank(Graph graph, double *solution, double damping, double convergence)
             // Write the result
             solution[i] = new_score[i];
         }
-
         converged = global_diff < convergence;
         // Swap the new and old scores (the pointers)
         std::swap(old_score, new_score);
     }
+	
 
     delete old_score;
     delete new_score;

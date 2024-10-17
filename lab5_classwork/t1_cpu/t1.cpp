@@ -236,7 +236,7 @@ long count_edges_depth_2_index(Graph graph, long *solution, int *index)
 
         // store the solution
         solution[index[i]] += edges;
-        #pragma omp barrier
+    
         total_edges += edges;
     }
 

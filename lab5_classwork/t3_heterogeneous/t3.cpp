@@ -91,11 +91,40 @@ void example(int N, float *A, float *B, float *C, float *D, float *E, float *F, 
 void cpu_only(int N, float *A, float *B, float *C, float *D, float *E, float *F, float *X, float *Y)
 {
     // your implementation here
+	MATMUL(N, D, B, C);
+
+	MATMUL(N, B, F, A);
+
+	MATMUL(N, C, A, E);
+
+	matsquash(N, F, X);
+
+	MVMUL(N, E, X, Y);
 }
 
 void heterogeneous(int N, float *A, float *B, float *C, float *D, float *E, float *F, float *X, float *Y)
 {
     // your implementation here
+	#pragma omp target data \
+					map(to:B[0:N*N])  map(to:D[0:N*N])  map(to:F[0:N*N]) map(to:X[0:N]) \
+					map(alloc:A[0:N*N]) map(alloc:C[0:N*N])	map(alloc:E[0:N*N]) \
+					map(from:Y[0:N]) 
+	{
+	#pragma omp target teams distribute nowait depend(out: C)
+	MATMUL(N, D, B, C);
+
+	#pragma omp target teams distribute nowait depend(out: A)
+	MATMUL(N, B, F, A);
+
+	#pragma omp target teams distribute nowait depend(in: C, A) depend(out: E)
+	MATMUL(N, C, A, E);
+	
+	matsquash(N, F, X);
+	#pragma omp update to(X)
+	
+	#pragma omp target teams distribute depend(in: E)
+	MVMUL(N, E, X, Y);
+	}
 }
 
 int main(int argc, char *argv[])

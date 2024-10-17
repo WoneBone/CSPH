@@ -89,10 +89,13 @@ void randmat_gpu(Matrix_u32 &A, const int *X)
 {
     const int N = A.rows;
     uint32_t *A_data = &A.data[0];
-
+	
+	#pragma omp target data map(to: X[0:N*N]) map(from:A_data[0:N*N])
+	#pragma omp target teams distribute
     // for every matrix element
     for (int r = 0; r < N; r++)
     {
+		#pragma omp loop
         for (int c = 0; c < N; c++)
         {
             uint32_t val = r * N + c;

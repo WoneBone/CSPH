@@ -193,7 +193,7 @@ long count_edges_depth_2_irregular(Graph graph, long *solution, int *_unused)
     long total_edges = 0;
 
     // For every node
-    #pragma omp parallel for simd schedule(dynamic,(NUM_NODES/8)) reduction(+: total_edges)
+    #pragma omp parallel for simd schedule(dynamic,YOUR_DISTRIBUTION) reduction(+: total_edges)
     for (int i = 0; i < n_nodes; ++i)
     {
         long edges = 0;

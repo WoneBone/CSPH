@@ -19,7 +19,7 @@ double serialFrobenius(double** mat, int N){
 }
 
 void syclFrobenius(sycl::queue Queue, double** syclmat, int N, double* total_time, double* sumfrobenius){
-    double* syclNorm = sycl::malloc_device<double>(1, Queue);
+    double* syclNorm = sycl::malloc_shared<double>(1, Queue);
 	Queue.memcpy(&syclNorm, &sumfrobenius, sizeof(double));
 
     sycl::event event = Queue.submit([&](sycl::handler& h){
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     double** syclmat = sycl::malloc_shared<double*>(N, defaultQueue);
 
     for(int i = 0; i < N; i++){
-        syclmat[i] =  sycl::malloc_device<double>(N, defaultQueue);
+        syclmat[i] =  sycl::malloc_shared<double>(N, defaultQueue);
         for(int j = 0; j < N; j++) defaultQueue.memcpy(&syclmat[i][j], &serial[i][j], sizeof(double));
     }
 

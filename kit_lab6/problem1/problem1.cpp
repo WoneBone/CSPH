@@ -19,18 +19,20 @@ double serialFrobenius(double** mat, int N){
 }
 
 void syclFrobenius(sycl::queue Queue, double** syclmat, int N, double* total_time, double* sumfrobenius){
-    sycl::event event = Queue.submit([&](sycl::handler& h){
+    double* syclNorm = sycl::malloc_device<double>(1, Queue);
+	Queue.memcpy(&syclNorm, &sumfrobenius, sizeof(double));
 
-        h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 8192), std::min(N, 8192)),sycl::range(32,32)),  
-                    [=](sycl::nd_item<2> item) {
+    sycl::event event = Queue.submit([&](sycl::handler& h){
+        h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
+					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
             int x = item.get_global_id(0), y = item.get_global_id(1);
-            sycl::atomic_ref<double, sycl::memory_order::relaxed, sycl::memory_scope::device, sycl::access::address_space::global_space> atomic_global_bin(sumfrobenius[0]);
             
             for(int i = x; i < N; i += item.get_global_range(0)){
                 for(int j = y; j < N; j += item.get_global_range(1)){
-                    atomic_global_bin.fetch_add(syclmat[i][j]*syclmat[i][j]);
+					syclNorm += (syclmat[i][j]*syclmat[i][j]);
                 }
             }
+			
         });
     });
 
@@ -40,6 +42,8 @@ void syclFrobenius(sycl::queue Queue, double** syclmat, int N, double* total_tim
     uint64_t end = event.get_profiling_info<sycl::info::event_profiling::command_end>();
     *total_time = static_cast<double>(end - start) / pow(10,9);
 
+	Queue.memcpy(sumfrobenius, syclNorm, sizeof(double));
+    sycl::free(syclNorm, Queue);
     sumfrobenius[0] = sqrt(sumfrobenius[0]);
 }
 
@@ -90,32 +94,31 @@ int main(int argc, char** argv) {
     //device is CPU, but you are free to also test on GPU (just be careful
     //with allocations and initializations)
     sycl::property_list prop_list{sycl::property::queue::enable_profiling()};
-    auto defaultQueue = sycl::queue{sycl::cpu_selector_v, prop_list};
+    auto defaultQueue = sycl::queue{sycl::gpu_selector_v, prop_list};
 
     std::cout << "Running on: "  << defaultQueue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
-    double** syclmat = sycl::malloc_device<double*>(N, defaultQueue);
+    double** syclmat = sycl::malloc_shared<double*>(N, defaultQueue);
 
     for(int i = 0; i < N; i++){
-        syclmat[i] = sycl::malloc_device<double>(N, defaultQueue);
-        for(int j = 0; j < N; j++) syclmat[i][j] = serial[i][j];
+        syclmat[i] =  sycl::malloc_device<double>(N, defaultQueue);
+        for(int j = 0; j < N; j++) defaultQueue.memcpy(&syclmat[i][j], &serial[i][j], sizeof(double));
     }
 
-    double* syclNorm = sycl::malloc_device<double>(1, defaultQueue);
-    syclNorm[0] = 0.0f;
+	double hostNorm = 0.0;
 
     //
     // Compute the Frobenius Norm using the SYCL implementation
     //
     double minSYCL = 1e30, syclTime = 0.0f;
     for (int i = 0; i < 5; ++i) {
-        syclFrobenius(defaultQueue, syclmat, N, &syclTime, syclNorm);
+        syclFrobenius(defaultQueue, syclmat, N, &syclTime, &hostNorm);
         minSYCL = std::min(minSYCL, syclTime);
     }
 
     printf("[frobenius norm sycl]:\t\t[%.3f] ms\n", minSYCL * 1000);
 
-    if (!verifyResult (serialNorm, syclNorm[0])) {
+    if (!verifyResult (serialNorm, hostNorm)) {
         printf ("Error : SYCL output differs from sequential output\n");
     }
     else printf("\t\t\t\t(%.2fx speedup from SYCL)\n", minSerial/minSYCL);
@@ -127,7 +130,6 @@ int main(int argc, char** argv) {
 
     free(serial);
     sycl::free(syclmat, defaultQueue);
-    sycl::free(syclNorm, defaultQueue);
 
     return 0;
 }

@@ -48,7 +48,7 @@ void serialKMeans(Point* points, double** cents, int N, int C){
     }
 }
 
-void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time){
+/* void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time){
     double* syclNorm = sycl::malloc_device<double>(1, Queue);
 	double* sycl_min_Norm = sycl::malloc_device<double>(1, Queue);
     double** syclCents = sycl::malloc_device<double*>(1, Queue);
@@ -102,6 +102,64 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
             }
         });
     });
+    return;
+}
+ */
+
+
+void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time) {
+    // Allocate memory on the device for points and centroids
+    Point* syclPoints = sycl::malloc_device<Point>(N, Queue);
+    double* syclCents = sycl::malloc_device<double>(C * 2, Queue); // Assuming 2D points
+
+    // Copy data to the device
+    Queue.memcpy(syclPoints, points, sizeof(Point) * N).wait();
+    Queue.memcpy(syclCents, cents[0], sizeof(double) * C * 2).wait();
+
+    // First kernel: assign points to the nearest centroid
+    Queue.submit([&](sycl::handler& h) {
+        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i) {
+            double minNorm = 1e6;
+            int minIdx = 0;
+            for (int j = 0; j < C; ++j) {
+                double norm = sqrt((syclPoints[i].x - syclCents[2 * j]) * (syclPoints[i].x - syclCents[2 * j]) +
+                                   (syclPoints[i].y - syclCents[2 * j + 1]) * (syclPoints[i].y - syclCents[2 * j + 1]));
+                if (norm < minNorm) {
+                    minNorm = norm;
+                    minIdx = j;
+                }
+            }
+            syclPoints[i].cent_idx = minIdx;
+        });
+    }).wait();
+
+    // Second kernel: recalculate centroids based on point assignments
+    Queue.submit([&](sycl::handler& h) {
+        h.parallel_for(sycl::range<1>(C), [=](sycl::id<1> i) {
+            double sumX = 0.0;
+            double sumY = 0.0;
+            int count = 0;
+            for (int j = 0; j < N; ++j) {
+                if (syclPoints[j].cent_idx == i) {
+                    sumX += syclPoints[j].x;
+                    sumY += syclPoints[j].y;
+                    count++;
+                }
+            }
+            if (count > 0) {
+                syclCents[2 * i] = sumX / count;
+                syclCents[2 * i + 1] = sumY / count;
+            }
+        });
+    }).wait();
+
+    // Copy updated centroids back to the host
+    Queue.memcpy(cents[0], syclCents, sizeof(double) * C * 2).wait();
+
+    // Free device memory
+    sycl::free(syclPoints, Queue);
+    sycl::free(syclCents, Queue);
+
     return;
 }
 

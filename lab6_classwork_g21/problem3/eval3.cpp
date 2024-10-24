@@ -35,7 +35,7 @@ void serialDistance(int** data, int* array, float** dist, float* red, float* res
 void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float* red, float* res, int N, double* total_time){
     sycl::event event;
      event = Queue.submit([&](sycl::handler& h){
-        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> item){
+        h.parallel_for(sycl::range<1>(N), [=](sycl::nd_item<2>item){
             int x = item.get_global_id(0), y = item.get_global_id(1);
             for(int i=x ; i<N ; i+= item.get_global_range(0)){
                 for(int j=y; j<N; j+= item.get_global_range(1) ){

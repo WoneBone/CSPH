@@ -36,8 +36,9 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     sycl::event event;
      event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> item){
-             for(int i=0 ; i<N ; i++){
-                for(int j=0; j<N; j++ ){
+            int x = item.get_global_id(0), y = item.get_global_id(1);
+            for(int i=x ; i<N ; i+= item.get_global_range(0)){
+                for(int j=y; j<N; j+= item.get_global_range(1) ){
                     if(data[i][j] == array[j]){
                        dist[i][j] = array[j]*3;
                     } 

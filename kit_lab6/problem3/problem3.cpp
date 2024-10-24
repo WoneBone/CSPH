@@ -70,7 +70,7 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
         });
     }).wait();
 
-    sycl::event2 event = Queue.submit([&](sycl::handler& h){
+    sycl::event event2 = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(C), [=](sycl::id<1> i){
             double x = 0.0f, y = 0.0f;
             int count = 0;

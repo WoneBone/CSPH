@@ -36,7 +36,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     sycl::event event;
          // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE FIRST STEP OF THE SERIAL CODE PROVIDED ABOVE
-    event = Queue.submit([&](sycl::handler& h){
+    /* event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
             for(int i=0 ; i<N ; i++){
                 for(int j=0; j<N; j++ ){
@@ -48,13 +48,13 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
        
     });
 
-    event.wait();
+    event.wait(); */
 
     uint64_t start = event.get_profiling_info<sycl::info::event_profiling::command_start>();
     uint64_t end = event.get_profiling_info<sycl::info::event_profiling::command_end>();
     *total_time = static_cast<double>(end - start) / pow(10,9);
 
-   /*  event = Queue.submit([&](sycl::handler& h){
+    event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
          h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
@@ -67,7 +67,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
         });
     });
 
-    event.wait(); */
+    event.wait();
 
     start = event.get_profiling_info<sycl::info::event_profiling::command_start>();
     end = event.get_profiling_info<sycl::info::event_profiling::command_end>();

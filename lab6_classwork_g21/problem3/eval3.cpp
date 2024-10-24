@@ -54,16 +54,16 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     uint64_t end = event.get_profiling_info<sycl::info::event_profiling::command_end>();
     *total_time = static_cast<double>(end - start) / pow(10,9);
 
-    float* syclRed = sycl::malloc_shared<float>(1, Queue);
+    
     event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
-         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),sycl::reduction(red, 0.0f,  sycl::plus<>()), [=](sycl::nd_item<2>item,auto& syclNorm){
+         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),sycl::reduction(red, 0.0f,  sycl::plus<>()), [=](sycl::nd_item<2>item){
             int x = item.get_global_id(0), y = item.get_global_id(1);
             for(int i=x ; i<N; i+= item.get_global_range(0)){
-                syclRed[i]=0;
+                
                 for(int j=y;j<N;j+= item.get_global_range(1)){
-                    syclRed[i] += dist[i][j];
+                    red[i] += dist[i][j];
                 }
             } 
         });

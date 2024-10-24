@@ -57,12 +57,12 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
          h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
-            for(int i=0 ; i<N; i++){
+/*             for(int i=0 ; i<N; i++){
                 red[i]=0;
                 for(int j=0;j<N;j++){
                     red[i]+=dist[i][j];
                 }
-            }
+            } */
         });
     });
 
@@ -76,11 +76,11 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE THIRD STEP OF THE SERIAL CODE PROVIDED ABOVE
          h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
-            *res=0;
+           /*  *res=0;
             for(int i= 0; i<N;i++){
                 if(red[i]>*res)
                     *res=red[i];
-            }
+            } */
         });
     });
 

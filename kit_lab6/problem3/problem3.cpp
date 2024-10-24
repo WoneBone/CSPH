@@ -49,7 +49,61 @@ void serialKMeans(Point* points, double** cents, int N, int C){
 }
 
 void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time){
-    //COMPLETE CODE FOR SYCL KERNEL
+    double syclNorm = sycl::malloc_device<double>(1, Queue);
+	double sycl_min_Norm = sycl::malloc_device<double>(1, Queue);
+    double syclCents = sycl::malloc_device<double>(1, Queue);
+    Point syclPoints = sycl::malloc_device<Point>(1, Queue);
+
+    Queue.memcpy(syclPoints,points, sizeof(Point));
+    Queue.memcpy(syclCents,cents, sizeof(double));
+
+    sycl::event event = Queue.submit([&](sycl::handler& h){
+        h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
+					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
+            int x = item.get_global_id(0), y = item.get_global_id(1);
+            
+            for(int i = x; i < N; i += item.get_global_range(0)){
+                sycl_min_Norm = 1000000;
+                for(int j = y; j < N; j += item.get_global_range(1)){
+                    syclNorm = sqrt((syclPoints[i].x - syclCents[j][0])*(syclPoints[i].x - syclCents[j][0]) + (syclPoints[i].y - syclCents[j][1])*(syclPoints[i].y - syclCents[j][1]));
+                    if(syclNorm < min_norm){
+                        sycl_min_Norm = syclNorm;
+                        syclPoints[i].cent_idx = j;
+                    }
+                }   
+            }
+			
+        });
+    });
+
+    double syclX = sycl::malloc_device<double>(1, Queue);
+	double syclY = sycl::malloc_device<double>(1, Queue);
+    
+	int syclCount = sycl::malloc_device<int>(1, Queue);
+
+    Queue.memcpy(syclCent, Cent, sizeof(double));
+
+    sycl::event event = Queue.submit([&](sycl::handler& h){
+        h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
+					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
+            int x = item.get_global_id(0), y = item.get_global_id(1);
+            
+            for(int i = x; i < N; i += item.get_global_range(0)){
+                syclX= syclY = 0.0f;
+                syclCount = 0;
+                for(int j = y;j < N; j += item.get_global_range(1)){
+                    if(points[j].cent_idx == i){
+                        syclX += points[j].x;
+                        syclY += points[j].y;
+                        syclCount++;
+                    }
+                }
+
+                syclCents[i][0] = syclX/(double)syclCount;
+                syclCents[i][1] = syclY/(double)syclCount;
+            }
+        });
+    });
     return;
 }
 

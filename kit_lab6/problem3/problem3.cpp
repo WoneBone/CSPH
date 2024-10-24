@@ -57,6 +57,13 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
     Queue.memcpy(syclPoints,points, sizeof(Point));
     Queue.memcpy(syclCents,cents, sizeof(double));
 
+    double* syclX = sycl::malloc_device<double>(1, Queue);
+	double* syclY = sycl::malloc_device<double>(1, Queue);
+    
+	int* syclCount = sycl::malloc_device<int>(1, Queue);
+
+    Queue.memcpy(syclCents, cents, sizeof(double));
+
     sycl::event event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
 					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
@@ -74,16 +81,6 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
             }
 			
         });
-    });
-
-    double* syclX = sycl::malloc_device<double>(1, Queue);
-	double* syclY = sycl::malloc_device<double>(1, Queue);
-    
-	int* syclCount = sycl::malloc_device<int>(1, Queue);
-
-    Queue.memcpy(syclCents, cents, sizeof(double));
-
-    sycl::event event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
 					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
             int x = item.get_global_id(0), y = item.get_global_id(1);

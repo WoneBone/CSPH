@@ -20,19 +20,18 @@ double serialFrobenius(double** mat, int N){
 
 void syclFrobenius(sycl::queue Queue, double** syclmat, int N, double* total_time, double* sumfrobenius){
     double* syclNorm = sycl::malloc_shared<double>(1, Queue);
-	Queue.memcpy(&syclNorm, &sumfrobenius, sizeof(double));
+	Queue.memcpy(syclNorm, sumfrobenius, sizeof(double));
 
     sycl::event event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
 					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
             int x = item.get_global_id(0), y = item.get_global_id(1);
-            
+
             for(int i = x; i < N; i += item.get_global_range(0)){
                 for(int j = y; j < N; j += item.get_global_range(1)){
 					syclNorm += (syclmat[i][j]*syclmat[i][j]);
                 }
-            }
-			
+            }			
         });
     });
 
@@ -105,6 +104,8 @@ int main(int argc, char** argv) {
         for(int j = 0; j < N; j++) defaultQueue.memcpy(&syclmat[i][j], &serial[i][j], sizeof(double));
     }
 
+    printf("inicialization done\n");
+
 	double hostNorm = 0.0;
 
     //
@@ -114,6 +115,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 5; ++i) {
         syclFrobenius(defaultQueue, syclmat, N, &syclTime, &hostNorm);
         minSYCL = std::min(minSYCL, syclTime);
+        printf("Iteration number %d \n", i);
     }
 
     printf("[frobenius norm sycl]:\t\t[%.3f] ms\n", minSYCL * 1000);

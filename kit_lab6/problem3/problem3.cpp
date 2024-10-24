@@ -51,7 +51,7 @@ void serialKMeans(Point* points, double** cents, int N, int C){
 void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time){
     double* syclNorm = sycl::malloc_device<double>(1, Queue);
 	double* sycl_min_Norm = sycl::malloc_device<double>(1, Queue);
-    double** syclCents = sycl::malloc_device<double>(1, Queue);
+    double** syclCents = sycl::malloc_device<double*>(1, Queue);
     Point* syclPoints = sycl::malloc_device<Point>(1, Queue);
 
     Queue.memcpy(syclPoints,points, sizeof(Point));

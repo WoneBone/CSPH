@@ -19,6 +19,32 @@ void serialHistogram(double* mat, int* bins, int B, int N){
 
 void syclHistogram(sycl::queue Queue, double* sycldata, int* bins, int N, int B, double* total_time){
     //COMPLETE CODE FOR SYCL KERNEL
+
+    sycl::event event = Queue.submit([&](sycl::handler& h){
+            sycl::local_accessor<int, 1> local_bins(sycl::range<1>(B), h);
+            h.parallel_for(sycl::nd_range<1>(sycl::range(std::min(N, 8196)), sycl::range(64)), [=](sycl::nd_item<1> item){
+
+                    for(int i = item.get_local_id(0); i < B; i+=item.get_local_range(0)) local_bins[i]=0;
+                    item.barrier();
+
+                    int idx = item.get_global_id(0);
+                    if(idx < N){
+                        int j = static_cast<int>(sycldata[idx]*B);
+                        sycl::atomic_ref<int, sycl::memory_order::relaxed, sycl::memory_scope::work_group,
+                        sycl::access::address_space::local_space> local_atomic_bin(local_bins[j]);
+                        local_atomic_bin.fetch_add(1);
+                    }
+                    item.barrier();
+
+                    for(int i = item.get_local_id(0); i < B; i+=item.get_local_range(0)){
+                        sycl::atomic_ref<int, sycl::memory_order::relaxed, sycl::memory_scope::device,
+                        sycl::access::address_space::global_space> atomic_bin(bins[i]);
+                        atomic_bin.fetch_add(local_bins[i]);
+                    }
+            });
+    });
+
+    event.wait();
     return;
 }
 

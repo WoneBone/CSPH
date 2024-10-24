@@ -69,7 +69,7 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
 
         });
 
-        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
+        h.parallel_for(sycl::range<1>(C), [=](sycl::id<1> i){
             double x = 0.0f, y = 0.0f;
             int count = 0;
             for(int i = 0; i < C; i++){

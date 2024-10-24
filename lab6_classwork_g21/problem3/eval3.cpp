@@ -39,7 +39,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
             for(int i=0 ; i<N ; i++){
                 for(int j=0; j<N; j++ ){
                     if(data[i][j] == array[j]){
-                       dist[i][j] = float(array[j]*3);
+                       dist[i][j] = array[j]*3;
                     }
                 } 
             } 

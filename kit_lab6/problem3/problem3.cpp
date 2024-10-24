@@ -66,7 +66,7 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
                 sycl_min_Norm = 1000000;
                 for(int j = y; j < N; j += item.get_global_range(1)){
                     syclNorm = sqrt((syclPoints[i].x - syclCents[j][0])*(syclPoints[i].x - syclCents[j][0]) + (syclPoints[i].y - syclCents[j][1])*(syclPoints[i].y - syclCents[j][1]));
-                    if(syclNorm < min_norm){
+                    if(syclNorm < sycl_min_Norm){
                         sycl_min_Norm = syclNorm;
                         syclPoints[i].cent_idx = j;
                     }
@@ -79,9 +79,9 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
     double* syclX = sycl::malloc_device<double>(1, Queue);
 	double* syclY = sycl::malloc_device<double>(1, Queue);
     
-	int syclCount = sycl::malloc_device<int>(1, Queue);
+	int* syclCount = sycl::malloc_device<int>(1, Queue);
 
-    Queue.memcpy(syclCent, Cent, sizeof(double));
+    Queue.memcpy(syclCents, cents, sizeof(double));
 
     sycl::event event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  

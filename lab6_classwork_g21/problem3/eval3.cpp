@@ -55,7 +55,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     *total_time = static_cast<double>(end - start) / pow(10,9);
 
     
-    event = Queue.submit([&](sycl::handler& h){
+   /*  event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
          h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)), [=](sycl::nd_item<2>item){
@@ -67,7 +67,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
                 }
             } 
         });
-    });
+    }); */
 
     event.wait();
 

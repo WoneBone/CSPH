@@ -34,10 +34,18 @@ void serialDistance(int** data, int* array, float** dist, float* red, float* res
 
 void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float* red, float* res, int N, double* total_time){
     sycl::event event;
-    
-    event = Queue.submit([&](sycl::handler& h){
-        // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
+         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE FIRST STEP OF THE SERIAL CODE PROVIDED ABOVE
+    event = Queue.submit([&](sycl::handler& h){
+        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
+            for(int i=0 ; i<N ; i++){
+                for(int j=0; j<N; j++ ){
+                    if(data[i][j]==array[j])
+                        dist[i][j]=array[j]*3;
+                }
+            }
+        });
+       
     });
 
     event.wait();
@@ -49,6 +57,14 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
+         h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
+            for(int i=0 ; i<N; i++){
+                red[i]=0;
+                for(int j=0;j<N;j++){
+                    red[i]+=dist[i][j];
+                }
+            }
+        });
     });
 
     event.wait();
@@ -60,6 +76,13 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE THIRD STEP OF THE SERIAL CODE PROVIDED ABOVE
+         h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
+            *res=0;
+            for(int i= 0; i<N;i++){
+                if(red[i]>*res)
+                    *res=red[i];
+            }
+        });
     });
 
     event.wait();

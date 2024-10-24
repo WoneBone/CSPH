@@ -50,46 +50,45 @@ void serialKMeans(Point* points, double** cents, int N, int C){
 
 void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, double* total_time){
 
-    sycl::event event = Queue.submit([&](sycl::handler& h){
+   Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
-			double norm = 0, min_norm = 1000000;
-            int j = 0;
-
-            //Calculate for each point the closest centroid
-            for(int i = 0; i < N; i++){
+            double norm = 0, min_norm = 1000000;
+            // Calculate for each point the closest centroid
+            for(int i = 0; i < N; i++) {
                 min_norm = 1000000;
-                for(int j = 0; j < C; j++){
-                    norm = sqrt((points[i].x - cents[j][0])*(points[i].x - cents[j][0]) + (points[i].y - cents[j][1])*(points[i].y - cents[j][1]));
-                    if(norm < min_norm){
+                for(int j = 0; j < C; j++) {
+                    norm = sqrt((points[i].x - cents[j][0])*(points[i].x - cents[j][0]) + 
+                                (points[i].y - cents[j][1])*(points[i].y - cents[j][1]));
+                    if(norm < min_norm) {
                         min_norm = norm;
                         points[i].cent_idx = j;
                     }
                 }   
             }
-
         });
-    }).wait();
+    }).wait();  // Block until kernel execution is finished
 
-    sycl::event event2 = Queue.submit([&](sycl::handler& h){
+    // Second kernel: Update centroids
+    Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::range<1>(C), [=](sycl::id<1> i){
             double x = 0.0f, y = 0.0f;
             int count = 0;
-            for(int i = 0; i < C; i++){
+            for(int i = 0; i < C; i++) {
                 x = y = 0.0f;
                 count = 0;
-                for(int j = 0; j < N; j++){
-                    if(points[j].cent_idx == i){
+                for(int j = 0; j < N; j++) {
+                    if(points[j].cent_idx == i) {
                         x += points[j].x;
                         y += points[j].y;
                         count++;
                     }
                 }
-
-                cents[i][0] = x/(double)count;
-                cents[i][1] = y/(double)count;
+                cents[i][0] = x / (double)count;
+                cents[i][1] = y / (double)count;
             }
         });
-    }).wait();;
+    }).wait();  // Block until kernel execution is finished
+
     return;
 }
  

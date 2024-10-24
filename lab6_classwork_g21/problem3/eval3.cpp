@@ -25,7 +25,7 @@ void serialDistance(int** data, int* array, float** dist, float* red, float* res
     }
 
     *res=0;
-    for(int=0; i<N;i++){
+    for(int i= 0; i<N;i++){
         if(red[i]>*res)
             *res=red[i];
     }

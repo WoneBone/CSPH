@@ -10,6 +10,25 @@
 void serialDistance(int** data, int* array, float** dist, float* red, float* res, int N){
 
     // TODO: FILL WITH THE CODE PROVIDED TO YOU!
+    for(int i=0 ; i<N ; i++){
+
+        for(int j=0; j<N; j++ ){
+            if(data[i][j]==array[j])
+                dist[i][j]=array[j]*3;
+        }
+    }
+    for(int i=0 ; i<N; i++){
+        red[i]=0;
+        for(int j=0;j<N;j++){
+            red[i]+=dist[i][j];
+        }
+    }
+
+    *res=0;
+    for(int=0; i<N;i++){
+        if(red[i]>*res)
+            *res=red[i];
+    }
 
 }
 

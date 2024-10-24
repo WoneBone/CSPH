@@ -59,9 +59,9 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
         // DEVELOP A SYCL VERSION OF THE SECOND STEP OF THE SERIAL CODE PROVIDED ABOVE
          h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 2048), std::min(N, 2048)),sycl::range(32,32)), [=](sycl::nd_item<2>item){
             int x = item.get_global_id(0), y = item.get_global_id(1);
-            for(int i=0 ; i<N; i++){
+            for(int i=x ; i<N; i+= item.get_global_range(0)){
                 red[i]=0;
-                for(int j=0;j<N;j++){
+                for(int j=y;j<N;j+= item.get_global_range(1)){
                     red[i]+=dist[i][j];
                 }
             } 
@@ -80,7 +80,7 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 2048), std::min(N, 2048)),sycl::range(32,32)), [=](sycl::nd_item<2>item){
             int x = item.get_global_id(0), y = item.get_global_id(1);
            *res=0;
-            for(int i= 0; i<N;i++){
+            for(int i= x; i<N;i+= item.get_global_range(0)){
                 if(red[i]>*res)
                     *res=red[i];
             } 

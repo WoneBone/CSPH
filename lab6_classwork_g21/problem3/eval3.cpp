@@ -35,12 +35,12 @@ void serialDistance(int** data, int* array, float** dist, float* red, float* res
 void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float* red, float* res, int N, double* total_time){
     sycl::event event;
      event = Queue.submit([&](sycl::handler& h){
-        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> i){
+        h.parallel_for(sycl::range<1>(N), [=](sycl::id<1> item){
              for(int i=0 ; i<N ; i++){
                 for(int j=0; j<N; j++ ){
-                    /* if(data[i][j] == array[j]){
+                    if(data[i][j] == array[j]){
                        dist[i][j] = array[j]*3;
-                    } */
+                    } 
                 } 
             }  
         });

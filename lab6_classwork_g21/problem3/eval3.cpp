@@ -77,9 +77,9 @@ void syclDistance(sycl::queue Queue, int** data, int* array, float** dist, float
     event = Queue.submit([&](sycl::handler& h){
         // TODO: CREATE YOUR (SYCL PARALLEL_FOR) KERNEL SUBMISSION AND
         // DEVELOP A SYCL VERSION OF THE THIRD STEP OF THE SERIAL CODE PROVIDED ABOVE
-        h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 2048), std::min(N, 2048)),sycl::range(32,32)), [=](sycl::nd_item<2>item){
-            int x = item.get_global_id(0), y = item.get_global_id(1);
-           *res=0;
+        h.parallel_for(sycl::nd_range<1>(sycl::range(std::min(N, 2048), std::min(N, 2048)),sycl::range(32,32)), [=](sycl::nd_item<1>item){
+            int x = item.get_global_id(0);
+            *res=0;
             for(int i= x; i<N;i+= item.get_global_range(0)){
                 if(red[i]>*res)
                     *res=red[i];

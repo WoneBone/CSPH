@@ -66,7 +66,7 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
 
     sycl::event event = Queue.submit([&](sycl::handler& h){
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
-					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
+					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm),[=](sycl::nd_item<2>item, auto& sycl_min_Norm) {
             int x = item.get_global_id(0), y = item.get_global_id(1);
             
             for(int i = x; i < N; i += item.get_global_range(0)){
@@ -82,7 +82,8 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
 			
         });
         h.parallel_for(sycl::nd_range<2>(sycl::range(std::min(N, 1024), std::min(N, 1024)),sycl::range(32,32)),  
-					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclNorm) {
+					sycl::reduction(syclNorm, 0.0,  sycl::plus<>()), [=](sycl::nd_item<2>item, auto& syclX),[=](sycl::nd_item<2>item, auto& syclY),
+                    [=](sycl::nd_item<2>item, auto& syclCount) {
             int x = item.get_global_id(0), y = item.get_global_id(1);
             
             for(int i = x; i < N; i += item.get_global_range(0)){
@@ -96,8 +97,8 @@ void syclKMeans(sycl::queue Queue, Point* points, double** cents, int N, int C, 
                     }
                 }
 
-                syclCents[i][0] = syclX/(double)syclCount;
-                syclCents[i][1] = syclY/(double)syclCount;
+                syclCents[i][0] = syclX/(double*)syclCount;
+                syclCents[i][1] = syclY/(double*)syclCount;
             }
         });
     });

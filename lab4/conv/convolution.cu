@@ -119,21 +119,7 @@ void printCudaInfo() {
 __global__ void convolution_kernel(float *data, float *output, float *filters, int num_filters, int num_channels, int filter_size, int input_h, int input_w, int output_h, int output_w) {
   // TODO:
   // Here you should write your kernel to perform convolution using CUDA cores
-  int j = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = blockIdx.y * blockDim.y + threadIdx.y;
-  float tmp;
-  if(i>=output_w || j>=output_h){
-    return;
-  }
-  for (int f = 0; f < num_filters; f++) {
-        tmp = 0;
-        for (int kk = 0; kk < num_channels; kk++)
-          for (int jj = 0; jj < filter_size; jj++)
-            for (int ii = 0; ii < filter_size; ii++) {
-              tmp += data[id_img(kk, (j + jj), (i + ii), num_channels, input_w)] * filters[id_filter(f, kk, jj, ii, num_filters, num_channels, filter_size)];
-            }
-        output[id_img(f, j, i, num_filters, output_w)] = tmp;
-      }
+
   return;
 }
 
@@ -170,8 +156,8 @@ void convolution_gpu_cuda_cores(float *data, float *output, float *filters, int 
 
   // TODO:
   // Here you should configure your kernel launch parameters
-  dim3 threadsPerBlock (32, 32);
-  dim3 numBlocks((output_w+threadsPerBlock.x-1)/threadsPerBlock.x,(output_h+threadsPerBlock.y-1)/threadsPerBlock.y,1);
+  int threadsPerBlock = 1;
+  int numBlocks = 1;
 
   /* DO NOT MODIFY THIS PART
    * This part of the code is responsible for accurately measuring the time taken by the kernel.
@@ -191,7 +177,7 @@ void convolution_gpu_cuda_cores(float *data, float *output, float *filters, int 
    * The performance is calculated in GFLOPS.
    */
   cudaEventRecord(stop, 0);
-  cudaCheckError(cudaEventSynchronize(stop));
+  cudaEventSynchronize(stop);
   float elapsedTime;
   cudaEventElapsedTime(&elapsedTime, start, stop);
   cudaEventDestroy(start);

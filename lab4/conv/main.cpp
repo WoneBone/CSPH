@@ -148,12 +148,11 @@ int main(int argc, char *argv[]) {
   // Write CPU output image
   stbi_write_png("output.png", output_w, output_h, 1, data_int, output_w);
 
-  printf("num_filters: %d \n", num_filters);
   // GPU warm up
   convolution_gpu_cuda_cores(data_f, output, filters, num_filters, num_channels, filter_size, h, w, output_h, output_w, true);
   // clear the output array
   memset(output, 0, output_h * output_w * num_filters * sizeof(float));
-  
+
   // GPU implementation
   startTime = CycleTimer::currentSeconds();
   convolution_gpu_cuda_cores(data_f, output, filters, num_filters, num_channels, filter_size, h, w, output_h, output_w);
